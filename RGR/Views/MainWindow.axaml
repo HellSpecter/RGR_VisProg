@@ -1,0 +1,32 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RGR.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="using:RGR.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="RGR.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="BasketBall">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+  <StackPanel>
+    <Grid Background="#222222" ColumnDefinitions="*, *, *, *" RowDefinitions="*, *, *, *">
+      <Button Content="Button" Command="{Binding OnClick}"/>
+    </Grid>
+    <TabControl Background="#626262" Items="{Binding Tables.Tables}" SelectionChanged="OnSelect" >
+      <TabControl.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding TableName}" />
+        </DataTemplate>
+      </TabControl.ItemTemplate>
+    </TabControl>
+    <DataGrid Background="#626262" x:Name="dGrid" AutoGenerateColumns="False" VerticalScrollBarVisibility="Visible" Height="675" IsReadOnly="True">
+      
+    </DataGrid>
+  </StackPanel>
+
+</Window>
