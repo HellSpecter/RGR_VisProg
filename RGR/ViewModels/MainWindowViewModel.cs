@@ -4,52 +4,74 @@ using System.Text;
 using System.Data.SQLite;
 using System.Data;
 using ReactiveUI;
+using RGR.Models;
+using System.Collections.ObjectModel;
 
 namespace RGR.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        private SQLiteConnection sql_con;
         private DataSet tables;
+        private DBContext context;
 
-        public DataSet Tables
+        private ObservableCollection<DataTable> tablesList;
+        public ObservableCollection<DataTable> Tables
         {
-            get => tables;
-            private set => this.RaiseAndSetIfChanged(ref tables, value);
+            get => tablesList;
+            private set => this.RaiseAndSetIfChanged(ref tablesList, value);
         }
+
+        private DataTable selectedTable;
+        public DataTable SelectedTable
+        {
+            get => selectedTable;
+            set => this.RaiseAndSetIfChanged(ref selectedTable, value);
+        }
+
+        
         public MainWindowViewModel()
         {
-            sql_con = new SQLiteConnection("Data Source=DataBase.db;Mode=ReadWrite");
-            sql_con.Open();
-            SQLiteCommand command = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table' ORDER BY 1",sql_con);
-            DataTable tablesNames = new DataTable(); 
-            tablesNames.Load(command.ExecuteReader());
-            tables = new DataSet();
-            foreach(DataRow row in tablesNames.Rows)
+            context = DBContext.getInstance();
+            tables = context.getDataSet();
+            Tables = new ObservableCollection<DataTable>();
+            foreach(DataTable t in tables.Tables)
             {
-                string name = row.ItemArray[0].ToString();
-                if (name == "sqlite_sequence") continue;
-                SQLiteCommand sqlTab = new SQLiteCommand("SELECT * FROM "+name, sql_con);
-                DataTable table = new DataTable();
-                table.Load(sqlTab.ExecuteReader());
-                tables.Tables.Add(table);
-                DataRow t = table.Rows[0];
+                Tables.Add(t);
             }
+        }
+
+        public void AddRow()
+        {
+            if (SelectedTable as MyQuery != null) return;
+            DataRow row = SelectedTable.NewRow();
+            row.BeginEdit();
+            for(int i=0; i<row.ItemArray.Length; i++)
+            {
+                row[row.Table.Columns[i].ColumnName] = "0";
+            }
+            row.EndEdit();
+            SelectedTable.Rows.Add(row);
+        }
+
+        public void DeleteRows()
+        {
+            SelectedTable.Rows.RemoveAt(SelectedTable.Rows.Count - 1);
+            this.RaisePropertyChanged(nameof(SelectedTable.Rows));
+        }
+        public void AddTable(DataTable table)
+        {
+            if(!Tables.Contains(table))
+                Tables.Add(table);
         }
         
         public void OnClick()
         {
-            
-            foreach (DataTable table in tables.Tables) {
-                
-                SQLiteDataAdapter adapter = new SQLiteDataAdapter("select * from "+table.TableName, sql_con);
-                adapter.UpdateCommand = new SQLiteCommandBuilder(adapter).GetUpdateCommand();
-                adapter.Update(tables, table.TableName);
-             }
+            context.Save(tables);
         }
-        ~MainWindowViewModel()
+        public void deleteQuery(MyQuery quer)
         {
-            sql_con.Close();
+            Tables.Remove(quer);
+            this.RaisePropertyChanged("Tables");
         }
     }
 }

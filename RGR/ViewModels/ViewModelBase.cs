@@ -7,6 +7,5 @@ namespace RGR.ViewModels
 {
     public class ViewModelBase : ReactiveObject
     {
-
     }
 }
